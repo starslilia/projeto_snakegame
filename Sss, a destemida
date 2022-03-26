@@ -1,0 +1,144 @@
+import pygame
+from pygame.locals import *
+from sys import exit
+from random import randint
+
+pygame.init()
+
+pygame.mixer.music.set_volume(0.2)
+bgm = pygame.mixer.music.load('bgm.mp3')
+pygame.mixer.music.play(-1)
+
+sfx = pygame.mixer.Sound('sfx.wav')
+sfx.set_volume(0.3)
+
+largura = 640
+altura = 480
+
+x_sss = int(largura/2)
+y_sss = int(altura/2)
+
+velocidade = 10
+x_controle = velocidade
+y_controle = 0
+
+x_maca = randint(40, 600)
+y_maca = randint(50, 430)
+
+pontos = 0
+fonte = pygame.font.SysFont('courier new', 29, True, True)
+
+tela = pygame.display.set_mode((largura, altura))
+pygame.display.set_caption('sss, a destemida')
+relogio = pygame.time.Clock()
+lista_cobra = []
+comp_inicial = 5
+death = False
+
+def aumenta_cobra(lista_cobra):
+    for XeY in lista_cobra:
+        pygame.draw.rect(tela, (98, 255, 31), (XeY[0], XeY[1], 20, 20))
+
+def restart_game():
+    global pontos, comp_inicial, x_sss, y_sss, lista_cobra, lista_cabeca, x_maca, y_maca, morreu
+    pontos = 0
+    comp_inicial = 5
+    x_sss = int(largura/2)
+    y_sss = int(altura/2)
+    lista_cobra = []
+    lista_cabeca = []
+    x_maca = randint(40, 600)
+    y_maca = randint(50, 430)
+    morreu = False
+
+while True:
+    relogio.tick(30)
+    tela.fill((255, 255, 255))
+    mensagem = f'Pontos: {pontos}'
+    texto_format = fonte.render(mensagem, True, (0, 0, 0))
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            exit()
+        if event.type == KEYDOWN:
+            if event.key == K_a:
+                if x_controle == velocidade:
+                    pass
+                else:
+                    x_controle = -velocidade
+                    y_controle = 0
+            if event.key == K_d:
+                if x_controle == -velocidade:
+                    pass
+                else:
+                    x_controle = velocidade
+                    y_controle = 0
+            if event.key == K_w:
+                if y_controle == velocidade:
+                    pass
+                else:
+                    y_controle = -velocidade
+                    x_controle = 0
+            if event.key == K_s:
+                if y_controle == -velocidade:
+                    pass
+                else:
+                    y_controle = velocidade
+                    x_controle = 0
+
+    x_sss = x_sss + x_controle
+    y_sss = y_sss + y_controle
+
+    sss = pygame.draw.rect(tela, (98, 255, 31), (x_sss, y_sss, 20, 20))
+    maca = pygame.draw.rect(tela, (255, 26, 26), (x_maca, y_maca, 20, 20))
+
+    if sss.colliderect(maca):
+        x_maca = randint(40, 600)
+        y_maca = randint(50, 430)
+        pontos = pontos + 1
+        sfx.play()
+        comp_inicial = comp_inicial + 1
+
+    lista_cabeca = []
+    lista_cabeca.append(x_sss)
+    lista_cabeca.append(y_sss)
+
+    lista_cobra.append(lista_cabeca)
+
+    if lista_cobra.count(lista_cabeca) > 1:
+        fonte2 = pygame.font.SysFont('courier new', 19, True, True)
+        mensagem2 = 'Ah não! Você morreu :( aperte R para recomeçar!'
+        texto_format2 = fonte2.render(mensagem2, True, (0, 0, 0))
+        ret_texto = texto_format2.get_rect()
+
+        morreu = True
+        while morreu:
+            tela.fill((255, 255, 255))
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    exit()
+                if event.type == KEYDOWN:
+                    if event.key == K_r:
+                        restart_game()
+
+            ret_texto.center = (largura//2, altura//2)
+            tela.blit(texto_format2, ret_texto)
+            pygame.display.update()
+
+    if x_sss > largura:
+        x_sss = 0
+    if x_sss < 0:
+        x_sss = largura
+    if y_sss < 0:
+        y_sss = altura
+    if y_sss > altura:
+        y_sss = 0
+
+    if len(lista_cobra) > comp_inicial:
+        del lista_cobra[0]
+
+    aumenta_cobra(lista_cobra)
+
+    tela.blit(texto_format, (450, 40))
+    pygame.display.update()
